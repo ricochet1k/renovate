@@ -83,7 +83,7 @@ function parseConfigRegex(input: string): RegExp | null {
   return null;
 }
 
-type ConfigRegexPredicate = (s: string) => boolean;
+type ConfigRegexPredicate = (s: string) => object | boolean;
 
 export function configRegexPredicate(
   input: string
@@ -92,9 +92,9 @@ export function configRegexPredicate(
     const configRegex = parseConfigRegex(input);
     if (configRegex) {
       const isPositive = !input.startsWith('!');
-      return (x: string): boolean => {
-        const res = configRegex.test(x);
-        return isPositive ? res : !res;
+      return (x: string): object | boolean => {
+        const match = x.match(configRegex);
+        return isPositive ? (match ? match.groups ?? {} : false) : !match;
       };
     }
   }

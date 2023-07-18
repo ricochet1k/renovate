@@ -24,5 +24,5 @@ export abstract class Matcher implements MatcherApi {
   abstract matches(
     inputConfig: PackageRuleInputConfig,
     packageRule: PackageRule
-  ): boolean | null;
+  ): object | boolean | null;
 }

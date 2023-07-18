@@ -7,10 +7,10 @@ export function matcherOR(
   groupMatchers: MatcherApi[],
   inputConfig: PackageRuleInputConfig,
   packageRule: PackageRule
-): boolean | null {
+): object | boolean | null {
   let matchApplied = false;
   for (const matcher of groupMatchers) {
-    let isMatch;
+    let isMatch: object | boolean | null = null;
     switch (matchType) {
       case 'excludes':
         isMatch = matcher.excludes(inputConfig, packageRule);
@@ -28,7 +28,7 @@ export function matcherOR(
     matchApplied = true;
 
     if (is.truthy(isMatch)) {
-      return true;
+      return isMatch;
     }
   }
   return matchApplied ? false : null;

@@ -7,7 +7,7 @@ export class BaseBranchesMatcher extends Matcher {
   override matches(
     { baseBranch }: PackageRuleInputConfig,
     { matchBaseBranches }: PackageRule
-  ): boolean | null {
+  ): object | boolean | null {
     if (is.undefined(matchBaseBranches)) {
       return null;
     }
@@ -16,12 +16,18 @@ export class BaseBranchesMatcher extends Matcher {
       return false;
     }
 
-    return matchBaseBranches.some((matchBaseBranch): boolean => {
+    for (const matchBaseBranch of matchBaseBranches) {
       const isAllowedPred = configRegexPredicate(matchBaseBranch);
       if (isAllowedPred) {
-        return isAllowedPred(baseBranch);
+        const match = isAllowedPred(baseBranch);
+        if (match) {
+          return match;
+        }
       }
-      return matchBaseBranch === baseBranch;
-    });
+      if (matchBaseBranch === baseBranch) {
+        return true;
+      }
+    }
+    return false;
   }
 }

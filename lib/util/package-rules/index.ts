@@ -3,41 +3,14 @@ import slugify from 'slugify';
 import { mergeChildConfig } from '../../config';
 import type { PackageRule, PackageRuleInputConfig } from '../../config/types';
 import { logger } from '../../logger';
+import * as template from '../template';
 import matchers from './matchers';
 import { matcherOR } from './utils';
 
 function matchesRule(
   inputConfig: PackageRuleInputConfig,
   packageRule: PackageRule
-): boolean {
-  let positiveMatch = true;
-  let matchApplied = false;
-  // matches
-  for (const groupMatchers of matchers) {
-    const isMatch = matcherOR(
-      'matches',
-      groupMatchers,
-      inputConfig,
-      packageRule
-    );
-
-    // no rules are defined
-    if (is.nullOrUndefined(isMatch)) {
-      continue;
-    }
-
-    matchApplied = true;
-
-    if (!is.truthy(isMatch)) {
-      return false;
-    }
-  }
-
-  // not a single match rule is defined --> assume to match everything
-  if (!matchApplied) {
-    positiveMatch = true;
-  }
-
+): object | boolean {
   // excludes
   for (const groupExcludes of matchers) {
     const isExclude = matcherOR(
@@ -57,7 +30,36 @@ function matchesRule(
     }
   }
 
-  return positiveMatch;
+  let matched: { [k: string]: any } | boolean = true;
+
+  // matches
+  for (const groupMatchers of matchers) {
+    const isMatch = matcherOR(
+      'matches',
+      groupMatchers,
+      inputConfig,
+      packageRule
+    );
+
+    // no rules are defined
+    if (is.nullOrUndefined(isMatch)) {
+      continue;
+    }
+
+    if (!is.truthy(isMatch)) {
+      return false;
+    }
+
+    if (is.object(isMatch)) {
+      if (is.object(matched)) {
+        matched = { ...(matched as object), ...isMatch };
+      } else {
+        matched = { ...isMatch };
+      }
+    }
+  }
+
+  return matched;
 }
 
 export function applyPackageRules<T extends PackageRuleInputConfig>(
@@ -71,12 +73,27 @@ export function applyPackageRules<T extends PackageRuleInputConfig>(
   );
   for (const packageRule of packageRules) {
     // This rule is considered matched if there was at least one positive match and no negative matches
-    if (matchesRule(config, packageRule)) {
+    const matches = matchesRule(config, packageRule);
+    if (matches) {
       // Package rule config overrides any existing config
       const toApply = { ...packageRule };
-      if (config.groupSlug && packageRule.groupName && !packageRule.groupSlug) {
+      for (const [key, valueTemplate] of Object.entries(
+        toApply.templates ?? {}
+      )) {
+        const value = template.compile(valueTemplate, {
+          ...config,
+          ...(matches as object),
+        });
+        toApply[key] = value;
+        // logger.debug(
+        //   { dependency: config.depName, key, value, toApply },
+        //   `Applying template`
+        // );
+      }
+      delete toApply.templates;
+      if (config.groupSlug && toApply.groupName && !toApply.groupSlug) {
         // Need to apply groupSlug otherwise the existing one will take precedence
-        toApply.groupSlug = slugify(packageRule.groupName, {
+        toApply.groupSlug = slugify(toApply.groupName, {
           lower: true,
         });
       }
@@ -90,6 +107,7 @@ export function applyPackageRules<T extends PackageRuleInputConfig>(
       delete config.matchDepTypes;
       delete config.matchCurrentValue;
       delete config.matchCurrentVersion;
+      delete config.matchUpdateTypes;
     }
   }
   return config;

@@ -50,7 +50,7 @@ describe('util/package-rules/current-version', () => {
       expect(result).toBeFalse();
     });
 
-    it('return true for regex version match', () => {
+    it('return truthy for regex version match', () => {
       const result = matcher.matches(
         {
           versioning: 'ruby',
@@ -61,7 +61,7 @@ describe('util/package-rules/current-version', () => {
           matchCurrentVersion: '/^v?[~ -]?0/',
         }
       );
-      expect(result).toBeTrue();
+      expect(result).toBeTruthy();
     });
 
     it('return false for regex value match', () => {

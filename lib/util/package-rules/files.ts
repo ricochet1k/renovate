@@ -7,7 +7,7 @@ export class FileNamesMatcher extends Matcher {
   override matches(
     { packageFile, lockFiles }: PackageRuleInputConfig,
     { matchFileNames }: PackageRule
-  ): boolean | null {
+  ): object | boolean | null {
     if (is.undefined(matchFileNames)) {
       return null;
     }

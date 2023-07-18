@@ -352,6 +352,7 @@ export interface PackageRule
   matchConfidence?: MergeConfidence[];
   registryUrls?: string[] | null;
   vulnerabilitySeverity?: string;
+  templates?: Record<string, string>;
 }
 
 export interface ValidationMessage {

@@ -28,7 +28,7 @@ describe('util/package-rules/current-value', () => {
       expect(result).toBeFalse();
     });
 
-    it('return true for regex version match', () => {
+    it('return truthy for regex version match', () => {
       const result = matcher.matches(
         {
           currentValue: '"~> 0.1.0"',
@@ -37,7 +37,7 @@ describe('util/package-rules/current-value', () => {
           matchCurrentValue: '/^"/',
         }
       );
-      expect(result).toBeTrue();
+      expect(result).toBeTruthy();
     });
 
     it('return false for now value', () => {

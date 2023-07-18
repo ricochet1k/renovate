@@ -14,7 +14,7 @@ export class CurrentVersionMatcher extends Matcher {
       currentVersion,
     }: PackageRuleInputConfig,
     { matchCurrentVersion }: PackageRule
-  ): boolean | null {
+  ): object | boolean | null {
     if (is.undefined(matchCurrentVersion)) {
       return null;
     }
@@ -37,11 +37,9 @@ export class CurrentVersionMatcher extends Matcher {
       try {
         return (
           isUnconstrainedValue ||
-          !!(
-            currentValue &&
+          (!!currentValue &&
             version.isValid(currentValue) &&
-            version.matches(matchCurrentVersionStr, currentValue)
-          )
+            version.matches(matchCurrentVersionStr, currentValue))
         );
       } catch (err) {
         return false;

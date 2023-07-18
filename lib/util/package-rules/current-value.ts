@@ -8,7 +8,7 @@ export class CurrentValueMatcher extends Matcher {
   override matches(
     { currentValue }: PackageRuleInputConfig,
     { matchCurrentValue }: PackageRule
-  ): boolean | null {
+  ): object | boolean | null {
     if (is.undefined(matchCurrentValue)) {
       return null;
     }

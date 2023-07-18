@@ -8,21 +8,21 @@ import { massagePattern } from './utils';
 function matchPatternsAgainstName(
   matchPackagePatterns: string[],
   name: string
-): boolean {
-  let isMatch = false;
+): object | boolean {
   for (const packagePattern of matchPackagePatterns) {
-    if (isPackagePatternMatch(packagePattern, name)) {
-      isMatch = true;
+    const match = isPackagePatternMatch(packagePattern, name);
+    if (match) {
+      return match;
     }
   }
-  return isMatch;
+  return false;
 }
 
 export class PackagePatternsMatcher extends Matcher {
   override matches(
     { depName, packageName }: PackageRuleInputConfig,
     packageRule: PackageRule
-  ): boolean | null {
+  ): object | boolean | null {
     const { matchPackagePatterns } = packageRule;
     if (is.undefined(matchPackagePatterns)) {
       return null;
@@ -32,11 +32,11 @@ export class PackagePatternsMatcher extends Matcher {
       return false;
     }
 
-    if (
-      is.string(packageName) &&
-      matchPatternsAgainstName(matchPackagePatterns, packageName)
-    ) {
-      return true;
+    if (is.string(packageName)) {
+      const match = matchPatternsAgainstName(matchPackagePatterns, packageName);
+      if (match) {
+        return match;
+      }
     }
     if (matchPatternsAgainstName(matchPackagePatterns, depName)) {
       logger.once.info(
@@ -61,23 +61,26 @@ export class PackagePatternsMatcher extends Matcher {
       return false;
     }
 
-    let isMatch = false;
     for (const pattern of excludePackagePatterns) {
       const packageRegex = regEx(massagePattern(pattern));
       if (packageRegex.test(depName)) {
         logger.trace(`${depName} matches against ${String(packageRegex)}`);
-        isMatch = true;
+        return true;
       }
     }
-    return isMatch;
+    return false;
   }
 }
 
-function isPackagePatternMatch(pckPattern: string, pck: string): boolean {
+function isPackagePatternMatch(
+  pckPattern: string,
+  pck: string
+): object | boolean {
   const re = regEx(massagePattern(pckPattern));
-  if (re.test(pck)) {
+  const match = pck.match(re);
+  if (match) {
     logger.trace(`${pck} matches against ${String(re)}`);
-    return true;
+    return match;
   }
   return false;
 }
